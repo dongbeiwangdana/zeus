@@ -1,4 +1,3 @@
-/ An highlighted block
 pipeline {
 	//表示此pipeline只在label关键字指定的slave上运行，还有其他关键字 any/docker等。 
 	//即使需要针对所有对象生效，也必须要声明 agent any
