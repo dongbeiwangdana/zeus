@@ -1,0 +1,45 @@
+image: 192.168.60.153/wops/docker-docker:v0.1
+
+variables:
+  # go module
+  GOSUMDB: 'off'
+  GO111MODULE: 'on'
+  # 私有go库镜像
+  GOPROXY: http://192.168.0.103:9000
+  # 仓库信息
+  REMOTE_DOCKER_URI: 192.168.60.153/${CI_PROJECT_NAMESPACE}/${CI_PROJECT_NAME}
+  LATEST_IMAGE_TAG: "${CI_COMMIT_REF_NAME}-${CI_COMMIT_SHA}"
+
+stages:
+#  - unittest
+  - build
+#  - deploy
+  - message
+
+build:
+  only:
+    - /^develop$/
+    - /^master$/
+    - /^release/
+    - tags
+  stage: build
+  tags:
+    - harbor
+  script:
+#    - REMOTE_DOCKER_URI=192.168.0.103:8080/${CI_PROJECT_NAMESPACE}/${CI_PROJECT_NAME}
+    - docker pull ${REMOTE_DOCKER_URI}:latest || true # runner
+    - docker build --cache-from ${REMOTE_DOCKER_URI}:latest
+      --tag ${REMOTE_DOCKER_URI}:${LATEST_IMAGE_TAG} --tag ${REMOTE_DOCKER_URI}:latest .
+    - docker login 192.168.60.153 -u admin -p ${HARBOR_PWD}
+    - docker push ${REMOTE_DOCKER_URI}:latest
+    - docker push ${REMOTE_DOCKER_URI}:${LATEST_IMAGE_TAG}
+    - docker rmi ${REMOTE_DOCKER_URI}:${LATEST_IMAGE_TAG}
+
+message:
+  tags:
+    - report
+  when: always
+  stage: message
+  script:
+    - MESSAGE_HEADER="${CI_PROJECT_NAMESPACE}/${CI_PROJECT_NAME}:${CI_COMMIT_REF_SLUG}"
+    - echo ${MESSAGE_HEADER}
