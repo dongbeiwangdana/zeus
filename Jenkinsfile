@@ -1,3 +1,5 @@
+@Library('devops-lib') _
+
 pipeline {
     agent any
 
@@ -6,6 +8,7 @@ pipeline {
             steps {
                 echo 'Building..'
                 echo 'SUCCESS..'
+                call(name="wangran")
             }
         }
         stage('Test1') {
